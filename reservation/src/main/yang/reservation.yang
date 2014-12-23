@@ -1,0 +1,402 @@
+module reservation {
+	yang-version 1;
+
+	namespace
+      "inocybe";
+
+    prefix reservation;
+
+    organization "Inocybe";
+
+    contact
+      "Gabriel Robitaille-Montpetit <grmontpetit@gmail.com>";
+
+    description
+      "YANG version of the TEA-MIB.";
+
+    revision "2014-11-16" {
+      description
+        "reservation module in progress.";
+    }
+
+    identity reservation {
+      description
+        "The reservation itself.";
+    }
+
+    typedef id {
+        type uint32 {
+            range "1 .. 1000000";
+          }
+        description "Date de debut.";
+    }
+
+    typedef dateDebut {
+      type date;
+      description "Date de debut.";
+    }
+
+    typedef dateFin {
+     type date;
+      description "Date de fin.";
+    }
+
+    typedef heureDebut {
+      type heure;
+      description "Heure de debut.";
+    }
+	
+    typedef heureFin {
+      type heure;
+      description "Heure de fin";
+    }
+	
+	typedef pointDepart {
+	  type point;
+      description "Point de depart";
+    }
+	
+    typedef pointArrivee {
+      type point;
+      description "Point arrivee";
+    }
+	
+    typedef point {
+        type string {
+            length "0 .. 255";
+          }
+      description "Point";
+    }
+    
+    typedef heure {
+        type string {
+            length "0 .. 255";
+          }
+      description "Heure";
+    }
+    
+    typedef date {
+        type string {
+            length "0 .. 255";
+          }
+      description "Date";
+    }
+
+    typedef DisplayString {
+      type string {
+        length "0 .. 255";
+      }
+      description
+        "YANG version of the SMIv2 DisplayString TEXTUAL-CONVENTION.";
+        reference
+          "RFC 2579, section 2.";
+    }
+
+    container reservation {
+      presence
+        "Indicate that the reservation service is available.";
+      description
+        "Top-level container for all toaster database objects.";
+
+      leaf dateDebut {
+        type date;
+        config false;
+        mandatory true;
+        description
+          "La date de debut de la reservation.";
+      }
+	  
+	  leaf dateFin {
+        type date;
+        config false;
+        mandatory true;
+        description
+          "La date de fin de la reservation.";
+      }
+	  
+	  leaf heureDebut {
+        type heure;
+        config false;
+        mandatory true;
+        description
+          "L'heure de debut de la reservation.";
+      }
+	  
+	  leaf heureFin {
+        type heure;
+        config false;
+        mandatory true;
+        description
+          "L'heure de debut de la reservation.";
+      }
+
+	   leaf pointDepart {
+        type point;
+        config false;
+        mandatory true;
+        description
+          "Le point de depart de la reservation.";
+      }
+	  
+	  leaf pointArrivee {
+        type point;
+        config false;
+        mandatory true;
+        description
+          "Le point d'arrivee de la reservation.";
+      }
+	  
+	  list chemin {
+          key "mac-address";
+          leaf mac-address {
+              type DisplayString;
+          }
+          leaf source {
+              type point;
+          }
+          leaf destination {
+              type point;
+          }
+        description
+          "Le chemin de la reservation.";
+      }
+
+      leaf reservationStatus {
+        type enumeration {
+          enum "active" {
+            value 1;
+            description
+              "La reservation est active.";
+          }
+          enum "inactive" {
+            value 2;
+            description
+              "La reservation est dans le systeme mais pas activee.";
+          }
+		  enum "cancellee" {
+            value 3;
+            description
+              "La reservation est dans le systeme mais est cancellee";
+          }
+		  enum "suprimee" {
+            value 4;
+            description
+              "La reservation est supprimee du systeme.";
+          }
+        }
+        config false;
+        mandatory true;
+        description
+          "Cette variable indique le status actuel de la reservation.";
+      }
+      leaf reservationMultiplicateurSecondes {
+        type uint32;
+        config true;
+        default 1000;
+        description
+		  "Le multiplicateur de temps des reservations. Multiplie par x les ms de la reservation.";
+      }
+    }// container cup
+
+	rpc ajouter-reservation {
+      description
+	   "Ajoute une reservation dans le systeme, sans l'activer. Si la reservation existe deja, un message
+	   d'erreur 'in-use' sera retourne. Un message 'resource-denied' sera retourne si le service de reservatione
+	   est non accessible.";
+      input {
+    	  leaf id {
+  			type id;
+  			config false;
+  			mandatory true;
+  			description
+  			  "La date de debut de la reservation.";
+    	  }
+ 
+		  leaf dateDebut {
+			type DisplayString;
+			config false;
+			mandatory true;
+			description
+			  "La date de debut de la reservation.";
+		  }
+		  
+		  leaf dateFin {
+			type DisplayString;
+			config false;
+			mandatory true;
+			description
+			  "La date de fin de la reservation.";
+		  }
+		  
+		  leaf heureDebut {
+			type DisplayString;
+			config false;
+			mandatory true;
+			description
+			  "L'heure de debut de la reservation.";
+		  }
+		  
+		  leaf heureFin {
+			type DisplayString;
+			config false;
+			mandatory true;
+			description
+			  "L'heure de debut de la reservation.";
+		  }
+
+		   leaf pointDebut {
+			type DisplayString;
+			config false;
+			mandatory true;
+			description
+			  "Le point de depart de la reservation.";
+		  }
+		  
+		  leaf pointArrvee {
+			type DisplayString;
+			config false;
+			mandatory true;
+			description
+			  "Le point d'arrivee de la reservation.";
+		  }
+		  
+		  list chemin {
+	          key "source";
+	          leaf source {
+	              type point;
+	          }
+	          leaf destination {
+	              type point;
+	          }
+	        description
+	          "Le chemin de la reservation.";
+	      }
+      }// input
+    }
+
+	rpc modifier-reservation {
+	      description
+		   "Modification d'une reservation dans le systeme, la reservation n'est
+	    	  pas activee automatiquement a cette etape.";
+	      input {
+			  leaf id {
+				type id;
+				config false;
+				mandatory true;
+				description
+				  "La date de debut de la reservation.";
+			  }
+			  
+			  leaf dateFin {
+				type date;
+				config false;
+				mandatory true;
+				description
+				  "La date de fin de la reservation.";
+			  }
+			  
+			  leaf heureDebut {
+				type date;
+				config false;
+				mandatory true;
+				description
+				  "L'heure de debut de la reservation.";
+			  }
+			  
+			  leaf heureFin {
+				type DisplayString;
+				config false;
+				mandatory true;
+				description
+				  "L'heure de debut de la reservation.";
+			  }
+
+			   leaf pointDebut {
+				type DisplayString;
+				config false;
+				mandatory true;
+				description
+				  "Le point de depart de la reservation.";
+			  }
+			  
+			  leaf pointArrvee {
+				type DisplayString;
+				config false;
+				mandatory true;
+				description
+				  "Le point d'arrivee de la reservation.";
+			  }
+			  
+			  list chemin {
+		          key "source";
+		          leaf source {
+		              type point;
+		          }
+		          leaf destination {
+		              type point;
+		          }
+		        description
+		          "Le chemin de la reservation.";
+		      }
+	    }// input
+	}
+	rpc supprimer-reservation {
+	      description
+		   "Ajoute une reservation dans le systeme, sans l'activer. Si la reservation existe deja, un message
+		   d'erreur 'in-use' sera retourne. Un message 'resource-denied' sera retourne si le service de reservatione
+		   est non accessible.";
+	      input {
+			  leaf id {
+				type id;
+				config false;
+				mandatory true;
+				description
+				  "La date de debut de la reservation.";
+			  }
+	    }// input
+	}
+	rpc activer-reservation {
+	      description
+		   "Active une reservation qui est dans le systeme.";
+	      input {
+			  leaf id {
+				type id;
+				config false;
+				mandatory true;
+				description
+				  "La date de debut de la reservation.";
+			  }
+	    }// input
+	}
+	rpc desactiver-reservation {
+	      description
+		   "Desactive une reservation qui est active dans le systeme.";
+	      input {
+			  leaf id {
+				type id;
+				config false;
+				mandatory true;
+				description
+				  "La date de debut de la reservation.";
+			  }
+	    }// input
+	}
+	rpc canceller-reservation {
+	      description
+		   "Cancelle un reservation qui est soit active ou inactive.";
+	      input {
+			  leaf id {
+				type id;
+				config false;
+				mandatory true;
+				description
+				  "La date de debut de la reservation.";
+			  }
+	    }// input
+	}
+    notification conflit-reservation {
+      description
+        "Indique qu'il y a un conflit entre les reservations.";
+    }  // notification conflit-reservation
+
+} // module reservation

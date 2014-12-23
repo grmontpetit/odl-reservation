@@ -1,0 +1,88 @@
+module reservation-provider-impl {
+
+    yang-version 1;
+    namespace "urn:opendaylight:params:xml:ns:yang:controller:config:reservation-provider:impl";
+    prefix "reservation-provider-impl";
+
+    import config { prefix config; revision-date 2013-04-05"; }
+    import rpc-context { prefix rpcx; revision-date 2013-06-17; }
+    import opendaylight-md-sal-binding { prefix mdsal; revision-date 2013-10-28; }
+
+    description
+        "This module contains the base YANG definitions for reservation-provider impl implementation.";
+
+    revision "2014-11-16" {
+        description
+            "Initial revision.";
+    }
+
+    // This is the definition of the service implementation as a module identity
+    identity reservation-provider-impl {
+            base config:module-type;
+
+            // Specifies the prefix for generated java classes.
+            config:java-name-prefix ReservationProvider;
+    }
+
+    // Augments the 'configuration' choice node under modules/module.
+    augment "/config:modules/config:module/config:configuration" {
+        case reservation-provider-impl {
+            when "/config:modules/config:module/config:type = 'reservation-provider-impl'";
+
+            //wires in the data-broker service 
+            container data-broker {
+                uses config:service-ref {
+                    refine type {
+                        mandatory false;
+                        config:required-identity mdsal:binding-async-data-broker;
+                    }
+                }
+            }
+
+            container rpc-registry {
+                uses config:service-ref {
+                    refine type {
+                       mandatory true;
+                       config:required-identity mdsal:binding-rpc-registry;
+                    }
+                }
+            }
+            container notification-service {
+               uses config:service-ref {
+                  refine type {
+                     mandatory true;
+                     config:required-identity mdsal:binding-notification-service;
+                  }
+               }
+            }       
+        }
+    }
+
+    // Augment the 'state' choice node under modules/module
+    augment "/config:modules/config:module/config:state" {
+        case reservation-provider-impl {
+            when "/config:modules/config:module/config:type = 'reservation-provider-impl'";
+            
+            leaf reservations-made {
+                type uint32;
+            }
+            
+            rpcx:rpc-context-instance "clear-reservations-made-rpc";
+        }
+    }
+
+    identity clear-reservations-made-rpc;
+
+    rpc clear-reservations-made  {
+        description
+          "JMX call to clear the reservations-made counter.";
+          
+        input {
+            uses rpcx:rpc-context-ref {
+                refine context-instance {
+                    rpcx:rpc-context-instance clear-reservations-made-rpc;
+                }
+            }
+        }
+    }
+}
